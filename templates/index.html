@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Policy Simplifier — Dashboard</title>
+
+  <!-- Bootstrap + Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+  :root{
+    /* Light theme vars */
+    --bg: #f4f7fb;
+    --panel: #ffffff;
+    --text: #0f1720;
+    --muted: #6c757d;
+    --accent-a: #0d47a1;
+    --accent-b: #1976d2;
+    --glass: rgba(255,255,255,0.72);
+    --card-shadow: 0 14px 40px rgba(2,6,23,0.12);
+    --soft-border: rgba(10,20,40,0.04);
+  }
+
+  /* Dark theme variables (applied when body.dark is present) */
+  body.dark {
+    --bg: #071427;            /* page background base */
+    --panel: #081826;         /* panel/card background */
+    --text: #e6f0f6;          /* main text color */
+    --muted: #9fb0c8;         /* muted text */
+    --glass: rgba(255,255,255,0.02);
+    --accent-a: #1e88e5;
+    --accent-b: #1565c0;
+    --card-shadow: 0 20px 50px rgba(2,6,23,0.45);
+    --soft-border: rgba(255,255,255,0.04);
+  }
+
+  html,body{
+    height:100%; margin:0;
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    color:var(--text); background: linear-gradient(135deg,var(--accent-b),var(--accent-a));
+  }
+
+  /* Main layout container */
+  .app-wrap{
+    max-width:1200px; margin:28px auto; padding:18px;
+    display:grid; grid-template-columns: 320px 1fr; gap:20px;
+  }
+
+  /* A subtle overlay behind the main content for light mode */
+  body:not(.dark) .app-wrap {
+    background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--panel);
+    border-radius:12px; padding:16px;
+    box-shadow: var(--card-shadow);
+    min-height:320px;
+    display:flex; flex-direction:column; gap:12px;
+    border: 1px solid var(--soft-border);
+  }
+  .brand { display:flex; gap:12px; align-items:center; }
+  .logo {
+    width:48px;height:48px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent-b),var(--accent-a));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700; font-size:18px;
+  }
+  .username { font-weight:700; font-size:1.05rem; color:var(--text); }
+  .small-muted { color:var(--muted); font-size:.9rem; }
+
+  /* Activity list */
+  .activity-list { overflow:auto; max-height:380px; padding-right:6px; }
+  .act-item {
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.88));
+    border-radius:10px; padding:10px; margin-bottom:10px; cursor:pointer;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+    transition: transform .08s ease, box-shadow .12s ease;
+    border: 1px solid rgba(10,20,40,0.03);
+    color: var(--text);
+  }
+  .act-item:focus { outline: 2px solid rgba(30,136,229,0.16); outline-offset: 2px; }
+  body.dark .act-item {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    box-shadow: 0 6px 18px rgba(2,6,23,0.18);
+    border: 1px solid rgba(255,255,255,0.03);
+    color: var(--text);
+  }
+  .act-item:hover{ transform: translateY(-4px); box-shadow: 0 18px 36px rgba(2,6,23,0.14); }
+  .act-meta { font-size:.82rem; color:var(--muted); }
+
+  /* Main panel */
+  .main-panel {
+    background: var(--panel);
+    border-radius:12px; padding:20px;
+    box-shadow: var(--card-shadow);
+    display:flex; flex-direction:column; gap:14px;
+    border: 1px solid var(--soft-border);
+  }
+
+  .editor, .controls, .output, .stats { width:100%; }
+  textarea.editor-area {
+    width:100%; min-height:200px; border-radius:10px; padding:14px;
+    border:1px solid rgba(10,20,40,0.06); font-size:15px; resize:vertical;
+    background: var(--glass); color:var(--text);
+    caret-color: var(--accent-b);
+    transition: box-shadow .12s ease, border-color .12s ease;
+  }
+  textarea.editor-area:focus {
+    box-shadow: 0 8px 30px rgba(13,71,161,0.08);
+    border-color: rgba(30,136,229,0.22);
+    outline: none;
+  }
+
+  .controls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .btn-brand {
+    background: linear-gradient(90deg,var(--accent-b),var(--accent-a));
+    border:none; color:#fff; box-shadow:0 8px 30px rgba(2,6,23,0.12);
+  }
+  .btn-outline-secondary {
+    border-radius:8px;
+  }
+
+  /* Output box */
+  .output-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.96));
+    border-radius:10px; padding:16px; border:1px solid rgba(10,20,40,0.04);
+    min-height:160px; overflow:auto; color:var(--text);
+  }
+  body.dark .output-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+  }
+
+  .tool-row { display:flex; gap:8px; align-items:center; }
+  .muted { color:var(--muted); font-size:.9rem; }
+
+  /* small responsive */
+  @media (max-width: 980px) {
+    .app-wrap{ grid-template-columns: 1fr; }
+    .sidebar{ order:2 }
+    .main-panel{ order:1 }
+  }
+
+  /* badges/highlight classes (backend uses .date .name .org .amount) */
+  .date{
+    background:#ffeb3b; padding:2px 6px; border-radius:6px; color:#08121a; font-weight:600;
+  }
+  .name{
+    background:#c8e6c9; padding:2px 6px; border-radius:6px; color:#052414; font-weight:600;
+  }
+  .org{
+    background:#ffe0b2; padding:2px 6px; border-radius:6px; color:#2b1a00; font-weight:600;
+  }
+  .amount{
+    background:#e1bee7; padding:2px 6px; border-radius:6px; color:#2a0b2a; font-weight:600;
+  }
+
+  /* Modal content tweaks */
+  .modal-body pre { white-space:pre-wrap; word-break:break-word; background:transparent; border:none; padding:0; color:var(--text); }
+
+  /* ---------- Dark mode specific overrides for improved contrast ---------- */
+  body.dark {
+    /* ensure text color is set */
+    color: var(--text);
+    background: linear-gradient(135deg,var(--accent-b),var(--accent-a));
+  }
+
+  /* Sidebar / activity items */
+  body.dark .sidebar {
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 12px 40px rgba(2,6,23,0.35);
+  }
+  body.dark .act-item {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+    color: var(--text);
+  }
+  body.dark .act-item .act-meta { color: var(--muted); }
+
+  /* Editor textarea in dark */
+  body.dark textarea.editor-area {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    color: var(--text);
+  }
+
+  /* Buttons in dark */
+  body.dark .btn-outline-secondary {
+    color: var(--text);
+    border-color: rgba(255,255,255,0.06);
+    background: transparent;
+  }
+  body.dark .btn-outline-secondary:hover { background: rgba(255,255,255,0.02); }
+
+  /* Output card in dark */
+  body.dark .output-card {
+    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.12));
+    border: 1px solid rgba(255,255,255,0.04);
+    color: var(--text);
+  }
+
+  /* Highlight colors tuned for dark backgrounds (higher contrast) */
+  body.dark .date { background: #ffd54f; color: #05121b; }
+  body.dark .name { background: #8be9a8; color: #022014; }
+  body.dark .org  { background: #ffcc80; color: #081214; }
+  body.dark .amount{ background: #c299ff; color: #1a052f; }
+
+  /* Make output highlight spans more legible on dark */
+  body.dark .output-card span {
+    padding: 3px 6px; border-radius: 6px; font-weight: 600; font-size: 0.95em;
+  }
+
+  /* Links & small text */
+  body.dark a { color: #9ecbff; text-decoration: none; }
+  body.dark a:hover { color: #cfe8ff; text-decoration: underline; }
+
+  /* modal adjustments for dark */
+  body.dark .modal-content {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* activity/meta contrast */
+  body.dark .act-meta, body.dark .meta-small { color: rgba(255,255,255,0.72); }
+
+  /* improved scrollbar visibility on dark */
+  body.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+  body.dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 10px; }
+  body.dark ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Accessibility: focus states */
+  .btn:focus, .act-item:focus, textarea:focus { box-shadow: 0 8px 30px rgba(13,71,161,0.06); }
+</style>
+
+</head>
+<body class="light-mode">
+  <div class="app-wrap container-fluid">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">PS</div>
+        <div>
+          <div class="username">{{ username or 'Guest' }}</div>
+          <div class="small-muted">Policy Simplifier user</div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button id="themeToggle" class="btn btn-sm btn-outline-secondary w-100" title="Toggle theme">
+          <i class="bi bi-moon-stars"></i> Theme
+        </button>
+        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger w-100">Logout</a>
+      </div>
+
+      <hr style="border-color: rgba(0,0,0,0.06)">
+
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="small-muted">Recent simplifications</div>
+        <button id="refreshActs" class="btn btn-sm btn-link muted">Refresh</button>
+      </div>
+
+      <div class="activity-list mt-2" id="activityList">
+        {% if activities and activities|length > 0 %}
+          {% for act in activities %}
+          <div class="act-item" tabindex="0" data-details="{{ act.details|e }}" data-timestamp="{{ act.timestamp }}" data-action="{{ act.action }}">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:600;">{{ act.action.replace('_',' ').title() }}</div>
+              <div class="act-meta">{{ act.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+            <div class="act-meta" style="margin-top:6px;">{{ act.details[:120] if act.details else '-' }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="small-muted">No previous simplifications found.</div>
+        {% endif %}
+      </div>
+
+      <form method="post" action="{{ url_for('clear_history') }}" onsubmit="return confirm('Clear your activity history?');">
+        <button type="submit" class="btn btn-outline-secondary btn-clear mt-3 w-100">Clear history</button>
+      </form>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <main class="main-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div>
+          <h2 style="margin:0; color: #0d47a1;">Policy Simplifier</h2>
+          <div class="muted">Paste a policy paragraph and click <strong>Simplify</strong>.</div>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <section class="editor">
+        <textarea id="policyInput" name="policy" form="simplifyForm" class="editor-area" placeholder="Paste your policy text here...">{{ request.form.policy or '' }}</textarea>
+        <div class="controls mt-2">
+          <form id="simplifyForm" method="post" action="{{ url_for('index') }}" style="display:inline;">
+            <!-- when user clicks Simplify, we include the language value -->
+            <input type="hidden" name="lang" id="hiddenLang" value="{{ selected_lang or 'en' }}">
+            <button type="submit" class="btn btn-brand"> <i class="bi bi-lightning-fill"></i> Simplify</button>
+          </form>
+
+          <button id="clearBtn" class="btn btn-outline-secondary">Clear</button>
+          <button id="pasteBtn" class="btn btn-outline-secondary">Paste</button>
+        </div>
+      </section>
+
+      <!-- Output + tools -->
+      <section class="output">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <h4 style="margin:0;">Output</h4>
+          <div class="d-flex gap-2">
+            <button id="copyOutput" class="btn btn-sm btn-outline-secondary"><i class="bi bi-clipboard"></i> Copy</button>
+            <button id="downloadOutput" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i> Download</button>
+          </div>
+        </div>
+
+        <div class="output-card mt-2" id="outputCard">
+          {% if output %}
+            <!-- output may contain spans (highlighted by backend) -->
+            <div id="outputArea">{{ output | safe }}</div>
+          {% else %}
+            <div class="muted">Your simplified policy will appear here.</div>
+            <div id="outputArea" style="display:none"></div>
+          {% endif %}
+        </div>
+
+        <div class="stats d-flex justify-content-between align-items-center mt-2">
+          <div class="muted" id="wordCount">Words: 0</div>
+          <div class="muted" id="charCount">Chars: 0</div>
+          <div class="muted" id="readTime">Est. read: 0 min</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Activity / details modal -->
+  <div class="modal fade" id="activityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Activity details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div><strong>Action:</strong> <span id="modalAction"></span></div>
+          <div><strong>When:</strong> <span id="modalWhen"></span></div>
+          <hr>
+          <div>
+            <strong>Details:</strong>
+            <pre id="modalDetails" style="white-space:pre-wrap;"></pre>
+          </div>
+          <hr>
+          <div>
+            <strong>Output Preview:</strong>
+            <div id="modalOutputPreview" class="mt-2 output-card"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="modalLoadIntoEditor" type="button" class="btn btn-primary">Load Input into Editor</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+ <script>
+  // Safe helper to get element and avoid exceptions
+  const $ = (sel) => document.querySelector(sel);
+
+  // ---------------- Theme toggle (persist in localStorage) ----------------
+  const body = document.body;
+  const themeToggle = $('#themeToggle');
+
+  function applyTheme(t){
+    if(t === 'dark'){
+      body.classList.add('dark');
+      body.classList.remove('light-mode');
+      if(themeToggle) themeToggle.innerHTML = '<i class="bi bi-sun"></i> Light';
+      localStorage.setItem('ps-theme','dark');
+    } else {
+      body.classList.remove('dark');
+      body.classList.add('light-mode');
+      if(themeToggle) themeToggle.innerHTML = '<i class="bi bi-moon-stars"></i> Dark';
+      localStorage.setItem('ps-theme','light');
+    }
+  }
+
+  try {
+    const saved = localStorage.getItem('ps-theme') || 'light';
+    applyTheme(saved);
+    if(themeToggle) themeToggle.addEventListener('click', ()=> applyTheme(body.classList.contains('dark') ? 'light' : 'dark'));
+  } catch (e) {
+    console.warn('Theme toggle unavailable:', e);
+  }
+
+  // ---------------- Activity handling & modal ----------------
+  const activityItems = document.querySelectorAll('.act-item');
+  let selectedActivity = null;
+  const modalEl = document.getElementById('activityModal');
+  const activityModal = (modalEl ? new bootstrap.Modal(modalEl) : null);
+
+  activityItems.forEach(item => {
+    item.addEventListener('click', () => {
+      selectedActivity = item;
+      const details = item.dataset.details || '';
+      const when = item.dataset.timestamp || '';
+      const action = item.dataset.action || '';
+      const md = $('#modalDetails'); if(md) md.textContent = details;
+      const mw = $('#modalWhen'); if(mw) mw.textContent = when;
+      const ma = $('#modalAction'); if(ma) ma.textContent = action.replaceAll('_', ' ');
+      const mop = $('#modalOutputPreview'); if(mop) mop.innerText = details; // fallback: show details
+      if(activityModal) activityModal.show();
+    });
+    item.addEventListener('keydown', (e) => { if(e.key === 'Enter') item.click(); });
+  });
+
+  const modalLoadBtn = $('#modalLoadIntoEditor');
+  if(modalLoadBtn){
+    modalLoadBtn.addEventListener('click', ()=>{
+      if(!selectedActivity) return;
+      const details = selectedActivity.dataset.details || '';
+      const marker = 'Input snippet:';
+      const idx = details.indexOf(marker);
+      const val = idx !== -1 ? details.substring(idx + marker.length).trim() : details;
+      const input = $('#policyInput');
+      if(input) input.value = val;
+      if(activityModal) activityModal.hide();
+    });
+  }
+
+  // If there's a "Load selected" control (optional), guard it
+  const loadSelectedActBtn = $('#loadSelectedAct');
+  if(loadSelectedActBtn){
+    loadSelectedActBtn.addEventListener('click', ()=>{
+      if(selectedActivity){
+        const details = selectedActivity.dataset.details || '';
+        const marker = 'Input snippet:';
+        const idx = details.indexOf(marker);
+        const val = idx !== -1 ? details.substring(idx + marker.length).trim() : details;
+        const input = $('#policyInput');
+        if(input) input.value = val;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        alert('Please click an activity item to select it first.');
+      }
+    });
+  }
+
+  // ---------------- Editor helpers: Clear / Paste ----------------
+  const clearBtn = $('#clearBtn');
+  if(clearBtn){
+    clearBtn.addEventListener('click', ()=> {
+      const input = $('#policyInput');
+      if(input) input.value = '';
+      // small update of stats in case output changed/cleared
+      setTimeout(updateStats, 120);
+    });
+  }
+
+  const pasteBtn = $('#pasteBtn');
+  if(pasteBtn){
+    pasteBtn.addEventListener('click', async ()=>{
+      try {
+        const text = await navigator.clipboard.readText();
+        const input = $('#policyInput');
+        if(input) input.value = text;
+      } catch (e) {
+        alert('Clipboard access denied or unavailable.');
+      }
+    });
+  }
+
+  // ---------------- Toggle highlights (client-side) ----------------
+  const toggleHighlights = $('#toggleHighlights');
+  if(toggleHighlights){
+    toggleHighlights.addEventListener('click', ()=>{
+      const out = $('#outputArea');
+      if(!out) return;
+      out.classList.toggle('show-highlights');
+      toggleHighlights.innerText = out.classList.contains('show-highlights') ? 'Highlights ON' : 'Toggle Highlights';
+    });
+  }
+
+  // ---------------- Copy & Download output ----------------
+  const copyOutputBtn = $('#copyOutput');
+  if(copyOutputBtn){
+    copyOutputBtn.addEventListener('click', ()=>{
+      const out = $('#outputArea');
+      if(!out) return alert('No output to copy.');
+      const text = out.innerText || out.textContent;
+      navigator.clipboard.writeText(text).then(()=>{ alert('Output copied to clipboard'); }, ()=> alert('Could not copy'));
+    });
+  }
+
+  const downloadOutputBtn = $('#downloadOutput');
+  if(downloadOutputBtn){
+    downloadOutputBtn.addEventListener('click', ()=>{
+      const out = $('#outputArea');
+      if(!out) return alert('No output to download.');
+      const text = out.innerText || out.textContent;
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'simplified_policy.txt';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+  }
+
+  // ---------------- Robust stats updater (works with server-rendered HTML) ----------------
+  function getOutputText() {
+    const out = $('#outputArea');
+    const card = $('#outputCard');
+
+    let text = '';
+    if(out) text = out.innerText || out.textContent || '';
+    if((!text || !text.trim()) && card) text = card.innerText || card.textContent || '';
+    return (text || '').trim();
+  }
+
+  function updateStats() {
+    const text = getOutputText();
+    const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+    const chars = text ? text.length : 0;
+    const minutes = words ? Math.max(1, Math.round(words / 200)) : 0;
+
+    const wc = $('#wordCount'), cc = $('#charCount'), rt = $('#readTime');
+    if(wc) wc.innerText = 'Words: ' + words;
+    if(cc) cc.innerText = 'Chars: ' + chars;
+    if(rt) rt.innerText = 'Est. read: ' + minutes + ' min';
+  }
+
+  // run on DOM ready + window load + short delay
+  document.addEventListener('DOMContentLoaded', () => { setTimeout(updateStats, 150); });
+  window.addEventListener('load', () => { updateStats(); setTimeout(updateStats, 300); });
+
+  // Observe changes inside outputCard so stats update when backend returns output
+  (function attachOutputObserver(){
+    const card = $('#outputCard');
+    if(!card) return;
+    const observer = new MutationObserver(()=> setTimeout(updateStats, 80));
+    observer.observe(card, { childList: true, subtree: true, characterData: true });
+  })();
+
+  // update stats after some user interactions (optional)
+  ['copyOutput','downloadOutput','pasteBtn','clearBtn'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('click', ()=> setTimeout(updateStats, 120));
+  });
+
+  // ---------------- Refresh activities control (safe) ----------------
+  const refreshActs = $('#refreshActs');
+  if(refreshActs) refreshActs.addEventListener('click', ()=> location.reload());
+
+  // ---------------- Language selector sync (guarded) ----------------
+  const langSelect = $('#langSelect');
+  const hiddenLang = $('#hiddenLang');
+  if(langSelect && hiddenLang){
+    langSelect.addEventListener('change', ()=> { hiddenLang.value = langSelect.value; });
+    hiddenLang.value = langSelect.value;
+  }
+
+  // Accessibility: keyboard focus styles applied via CSS; keep JS minimal
+</script>
+
+</body>
+</html>
