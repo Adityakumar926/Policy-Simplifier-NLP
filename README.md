@@ -45,3 +45,82 @@ The system can:
 ---
 
 ## Project Structure
+
+Policy-Simplifier-NLP
+│
+├── app.py
+├── test.py
+├── requirements.txt
+│
+├── templates
+│ ├── index.html
+│ ├── login.html
+│ ├── register.html
+│ ├── forgot_password.html
+│ └── reset_password.html
+│
+└── README.md
+
+
+---
+
+## Installation
+
+### 1. Clone the repository
+git clone https://github.com/Adityakumar926/Policy-Simplifier-NLP.git
+
+### 2. Navigate to the project directory
+cd Policy-Simplifier-NLP
+
+### 3. Install dependencies
+pip install -r requirements.txt
+
+---
+
+## Running the Project
+
+Start the Flask server:
+python app.py
+
+Then open your browser and go to:
+http://127.0.0.1:5000/
+
+---
+
+## Example Use Case
+
+**Input (Complex Policy Text):**
+
+> "Employees are required to adhere to organizational compliance protocols and ensure adherence to regulatory standards."
+
+**Simplified Output:**
+
+> "Employees must follow company rules and meet required regulations."
+
+---
+
+## Future Improvements
+
+- Multi-language policy simplification
+- Improved summarization techniques
+- Better semantic understanding
+- Integration with government policy datasets
+- Advanced readability scoring
+
+---
+
+## Author
+
+**Aditya Kumar**
+
+B.Tech – Computer Science Engineering  
+Machine Learning & NLP Enthusiast
+
+GitHub:  
+https://github.com/Adityakumar926
+
+---
+
+## License
+
+This project is for educational and research purposes.
