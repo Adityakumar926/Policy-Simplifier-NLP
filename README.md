@@ -46,11 +46,17 @@ The system can:
 
 ## Project Structure
 
+```
 Policy-Simplifier-NLP
 │
 ├── app.py
+├── model.py
 ├── test.py
 ├── requirements.txt
+├── Indian_Policy_Texts.docx
+│
+├── instance
+│ └── users.db
 │
 ├── templates
 │ ├── index.html
@@ -60,7 +66,7 @@ Policy-Simplifier-NLP
 │ └── reset_password.html
 │
 └── README.md
-
+```
 
 ---
 
